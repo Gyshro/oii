@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Homenagem Interativa</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
+  body { background: #000; }
+  #gameContainer {
+    width: 100%;
+    max-width: 430px;
+    height: 100svh;
+    min-height: 580px;
+    margin: 0 auto;
+    position: relative;
+    overflow: hidden;
+    background: #87CEEB;
+    font-family: 'Courier New', monospace;
+    touch-action: none;
+  }
+
+  /* SKY & BG */
+  #sky { position: absolute; inset: 0; background: linear-gradient(180deg, #4a90d9 0%, #87CEEB 60%, #90EE90 60%, #228B22 100%); }
+  #sun { position: absolute; top: 30px; right: 60px; width: 50px; height: 50px; background: #FFD700; border-radius: 50%; box-shadow: 0 0 20px #FFD700; }
+
+  /* TREES */
+  .tree { position: absolute; bottom: 40%; }
+  .tree-trunk { width: 14px; height: 30px; background: #8B4513; margin: 0 auto; }
+  .tree-top { width: 0; height: 0; border-left: 22px solid transparent; border-right: 22px solid transparent; border-bottom: 40px solid #228B22; margin: 0 auto; }
+  .tree-top2 { width: 0; height: 0; border-left: 18px solid transparent; border-right: 18px solid transparent; border-bottom: 32px solid #2d9e2d; margin: 0 auto; margin-top: -18px; }
+
+  /* GROUND */
+  #ground { position: absolute; bottom: 0; left: 0; right: 0; height: 40%; background: linear-gradient(180deg, #7ec850 0%, #5a9e30 30%, #4a8a20 100%); }
+  #path { position: absolute; bottom: 40%; left: 0; right: 0; height: 18px; background: #C8A060; border-top: 2px solid #B8904A; }
+
+  /* CAMERA WORLD */
+  #world { position: absolute; bottom: 0; left: 0; width: 4000px; height: 100%; }
+
+  /* CHARACTER */
+  #character { position: absolute; bottom: calc(40% + 18px); left: 80px; width: 44px; height: 90px; z-index: 10; }
+
+  .char-hair-wrap { position: relative; width: 44px; height: 14px; }
+  .char-hair-top { width: 34px; height: 14px; background: #111; border-radius: 10px 10px 0 0; margin: 0 auto; position: relative; z-index: 3; }
+  .char-hair-left { position: absolute; left: 0px; top: 10px; width: 8px; height: 54px; background: #111; border-radius: 0 0 6px 6px; z-index: 1; }
+  .char-hair-right { position: absolute; right: 0px; top: 10px; width: 8px; height: 58px; background: #111; border-radius: 0 0 6px 6px; z-index: 1; }
+
+  .char-head { width: 28px; height: 22px; background: #FDBCB4; border-radius: 50% 50% 42% 42%; margin: 0 auto; margin-top: -2px; position: relative; z-index: 2; }
+  .char-eyes { display: flex; justify-content: space-around; padding: 7px 5px 0; }
+  .char-eye { width: 4px; height: 5px; background: #111; border-radius: 50%; }
+
+  .char-dress-top { width: 28px; height: 20px; background: #e8001a; border-radius: 4px 4px 0 0; margin: 2px auto 0; position: relative; z-index: 2; }
+  .char-dress-skirt { width: 46px; height: 24px; background: #cc0018; border-radius: 2px 2px 16px 16px; margin: 0 auto; position: relative; z-index: 2; }
+  .char-dress-skirt::after { content: ''; position: absolute; bottom: 0; left: 4px; right: 4px; height: 5px; border-bottom: 3px solid #ff3355; border-radius: 0 0 10px 10px; }
+
+  .char-legs { display: flex; justify-content: center; gap: 5px; margin-top: 2px; position: relative; z-index: 2; }
+  .char-leg { width: 9px; height: 14px; background: #FDBCB4; border-radius: 3px; }
+  .char-leg.walk1 { transform: rotate(15deg); transform-origin: top center; }
+  .char-leg.walk2 { transform: rotate(-15deg); transform-origin: top center; }
+
+  /* NPC BASE */
+  .npc { position: absolute; bottom: calc(40% + 18px); z-index: 8; }
+
+  /* ABACATE */
+  #abacate { left: 900px; }
+  .avocado-body { width: 36px; height: 46px; background: #4a8c2a; border-radius: 50% 50% 60% 60%; position: relative; display: flex; align-items: center; justify-content: center; }
+  .avocado-inner { width: 22px; height: 28px; background: #c8e67a; border-radius: 50%; position: absolute; bottom: 4px; }
+  .avocado-seed { width: 12px; height: 14px; background: #7B3F00; border-radius: 50%; position: absolute; bottom: 10px; }
+  .avocado-eyes { display: flex; gap: 6px; position: absolute; top: 10px; }
+  .avocado-eye { width: 5px; height: 5px; background: #1a1a1a; border-radius: 50%; }
+  .avocado-smile { width: 14px; height: 6px; border-bottom: 2px solid #1a1a1a; border-radius: 0 0 8px 8px; position: absolute; top: 22px; }
+
+  /* CENOURÃO */
+  #cenoura { left: 1600px; }
+  .olaf-head { width: 36px; height: 34px; background: white; border-radius: 50%; position: relative; }
+  .olaf-eyes { display: flex; gap: 8px; justify-content: center; padding-top: 8px; }
+  .olaf-eye { width: 6px; height: 6px; background: #1a1a1a; border-radius: 50%; }
+  .olaf-nose { width: 0; height: 0; border-left: 4px solid transparent; border-right: 4px solid transparent; border-bottom: 12px solid #FF8C00; margin: 2px auto 0; }
+  .olaf-smile { width: 16px; height: 6px; border-bottom: 2px solid #1a1a1a; border-radius: 0 0 8px 8px; margin: 3px auto 0; }
+  .olaf-body { width: 32px; height: 30px; background: white; border-radius: 50%; margin: 2px auto 0; position: relative; }
+  .olaf-buttons { display: flex; flex-direction: column; align-items: center; gap: 4px; padding-top: 6px; }
+  .olaf-btn { width: 5px; height: 5px; background: #555; border-radius: 50%; }
+  .olaf-legs { display: flex; justify-content: center; gap: 6px; margin-top: 2px; }
+  .olaf-leg { width: 10px; height: 18px; background: white; border-radius: 4px; }
+
+  /* GHOSTFACE */
+  #ghost { left: 2350px; }
+  .ghost-mask { width: 36px; height: 46px; background: #f0f0f0; border-radius: 40% 40% 45% 45%; position: relative; border: 1px solid #ccc; }
+  .ghost-eyes { display: flex; gap: 8px; justify-content: center; padding-top: 10px; }
+  .ghost-eye { width: 10px; height: 14px; background: #1a1a1a; border-radius: 50% 50% 40% 40%; }
+  .ghost-mouth { width: 18px; height: 10px; background: #1a1a1a; border-radius: 0 0 8px 8px; margin: 4px auto 0; }
+  .ghost-robe { width: 38px; height: 28px; background: #1a1a1a; border-radius: 4px; margin: 0 auto; }
+  .ghost-knife { position: absolute; right: -14px; top: 10px; width: 3px; height: 22px; background: #aaa; transform: rotate(20deg); }
+  .ghost-knife::after { content: ''; position: absolute; top: -6px; left: -2px; width: 6px; height: 8px; background: #888; clip-path: polygon(50% 0%, 0% 100%, 100% 100%); }
+
+  /* PILL CHOICE */
+  #pillScene { display: none; position: absolute; inset: 0; background: rgba(0,0,0,0.85); z-index: 50; align-items: center; justify-content: center; flex-direction: column; gap: 24px; }
+  .pill-question { color: white; font-size: 20px; font-family: monospace; text-align: center; text-shadow: 0 0 10px #0f0; padding: 0 20px; }
+  .pill-hands { display: flex; gap: 40px; align-items: flex-end; justify-content: center; }
+  .pill-hand { display: flex; flex-direction: column; align-items: center; cursor: pointer; gap: 8px; }
+  .pill-hand svg { width: 60px; height: 80px; }
+  .pill-btn { padding: 10px 28px; border-radius: 30px; border: none; font-size: 16px; font-weight: bold; cursor: pointer; }
+  .pill-red { background: #e74c3c; color: white; }
+  .pill-blue { background: #2980b9; color: white; }
+
+  /* DIALOG BOX */
+  #dialogBox {
+    display: none; position: absolute; bottom: 8px; left: 8px; right: 8px;
+    background: rgba(0,0,10,0.92); border: 2px solid #6af; border-radius: 10px;
+    padding: 10px 14px 12px; z-index: 40; min-height: 80px; cursor: pointer;
+  }
+  #dialogName { color: #6af; font-size: 13px; font-weight: bold; margin-bottom: 4px; letter-spacing: 1px; }
+  #dialogText { color: #fff; font-size: 14px; line-height: 1.5; }
+  #dialogTap { color: #aaa; font-size: 11px; text-align: right; margin-top: 6px; animation: blink 1s infinite; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+  /* CONTROLS */
+  #controls { position: absolute; bottom: 100px; left: 0; right: 0; display: flex; justify-content: space-between; padding: 0 16px; z-index: 30; pointer-events: none; }
+  .ctrl-btn {
+    width: 60px; height: 60px; background: rgba(255,255,255,0.18); border: 2px solid rgba(255,255,255,0.4);
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-size: 24px; color: white; pointer-events: all; cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .ctrl-btn:active { background: rgba(255,255,255,0.4); transform: scale(0.92); }
+  #controls.hidden { display: none; }
+
+  /* MATRIX OVERLAY */
+  #matrixOverlay { display: none; position: absolute; inset: 0; z-index: 45; background: #000; }
+  #matrixCanvas { width: 100%; height: 100%; }
+  #glitchOverlay { display: none; position: absolute; inset: 0; z-index: 46; pointer-events: none; }
+
+  /* TV OFF */
+  #tvOff { display: none; position: absolute; inset: 0; background: #000; z-index: 99; align-items: center; justify-content: center; }
+  #tvLine { width: 100%; height: 4px; background: white; animation: tvShut 0.6s forwards; }
+  @keyframes tvShut { 0%{height:100%;opacity:1} 60%{height:4px;opacity:1} 80%{height:2px;opacity:0.6} 100%{height:0;opacity:0} }
+
+  /* MUSIC NOTE */
+  #musicNote { display: none; position: absolute; top: 12px; left: 12px; color: #0f0; font-size: 18px; z-index: 60; animation: float 2s ease-in-out infinite; }
+  @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+</style>
+</head>
+<body>
+
+<div id="gameContainer">
+  <div id="sky"><div id="sun"></div></div>
+  <div id="world">
+    <!-- Trees -->
+    <div class="tree" style="left:200px"><div class="tree-top"></div><div class="tree-top2"></div><div class="tree-trunk"></div></div>
+    <div class="tree" style="left:450px"><div class="tree-top"></div><div class="tree-top2"></div><div class="tree-trunk"></div></div>
+    <div class="tree" style="left:700px"><div class="tree-top"></div><div class="tree-top2"></div><div class="tree-trunk"></div></div>
+    <div class="tree" style="left:1200px"><div class="tree-top"></div><div class="tree-top2"></div><div class="tree-trunk"></div></div>
+    <div class="tree" style="left:1400px"><div class="tree-top"></div><div class="tree-top2"></div><div class="tree-trunk"></div></div>
+    <div class="tree" style="left:2000px"><div class="tree-top"></div><div class="tree-top2"></div><div class="tree-trunk"></div></div>
+    <div class="tree" style="left:2200px"><div class="tree-top"></div><div class="tree-top2"></div><div class="tree-trunk"></div></div>
+    <div class="tree" style="left:2900px"><div class="tree-top"></div><div class="tree-top2"></div><div class="tree-trunk"></div></div>
+    <div id="ground"><div id="path"></div></div>
+
+    <!-- ABACATE -->
+    <div class="npc" id="abacate">
+      <div class="avocado-body">
+        <div class="avocado-eyes"><div class="avocado-eye"></div><div class="avocado-eye"></div></div>
+        <div class="avocado-smile"></div>
+        <div class="avocado-inner"><div class="avocado-seed"></div></div>
+      </div>
+    </div>
+
+    <!-- CENOURÃO -->
+    <div class="npc" id="cenoura">
+      <div class="olaf-head">
+        <div class="olaf-eyes"><div class="olaf-eye"></div><div class="olaf-eye"></div></div>
+        <div class="olaf-nose"></div>
+        <div class="olaf-smile"></div>
+      </div>
+      <div class="olaf-body">
+        <div class="olaf-buttons"><div class="olaf-btn"></div><div class="olaf-btn"></div><div class="olaf-btn"></div></div>
+      </div>
+      <div class="olaf-legs"><div class="olaf-leg"></div><div class="olaf-leg"></div></div>
+    </div>
+
+    <!-- GHOSTFACE -->
+    <div class="npc" id="ghost">
+      <div style="position:relative">
+        <div class="ghost-mask">
+          <div class="ghost-eyes"><div class="ghost-eye"></div><div class="ghost-eye"></div></div>
+          <div class="ghost-mouth"></div>
+          <div class="ghost-knife"></div>
+        </div>
+      </div>
+      <div class="ghost-robe"></div>
+    </div>
+  </div>
+
+  <!-- CHARACTER -->
+  <div id="character">
+    <div class="char-hair-wrap">
+      <div class="char-hair-top"></div>
+      <div class="char-hair-left"></div>
+      <div class="char-hair-right"></div>
+    </div>
+    <div class="char-head"><div class="char-eyes"><div class="char-eye"></div><div class="char-eye"></div></div></div>
+    <div class="char-dress-top"></div>
+    <div class="char-dress-skirt"></div>
+    <div class="char-legs"><div class="char-leg walk1" id="leg1"></div><div class="char-leg walk2" id="leg2"></div></div>
+  </div>
+
+  <!-- MATRIX -->
+  <div id="matrixOverlay"><canvas id="matrixCanvas"></canvas></div>
+  <div id="glitchOverlay"></div>
+
+  <!-- MUSIC NOTE -->
+  <div id="musicNote">♪ ♫</div>
+
+  <!-- AUDIO -->
+  <audio id="bgMusic" src="music.mp3" loop preload="auto" playsinline webkit-playsinline></audio>
+
+  <!-- DIALOG -->
+  <div id="dialogBox">
+    <div id="dialogName"></div>
+    <div id="dialogText"></div>
+    <div id="dialogTap">toque para continuar ▼</div>
+  </div>
+
+  <!-- PILL SCENE -->
+  <div id="pillScene">
+    <div class="pill-question">Qual você escolhe?</div>
+    <div class="pill-hands">
+      <div class="pill-hand" id="pickRed">
+        <svg viewBox="0 0 60 80"><ellipse cx="30" cy="20" rx="14" ry="20" fill="#e74c3c"/><rect x="16" y="38" width="28" height="30" rx="6" fill="#c0392b"/><rect x="22" y="36" width="16" height="6" rx="3" fill="#e74c3c"/></svg>
+        <div class="pill-btn pill-red">Vermelha</div>
+      </div>
+      <div class="pill-hand" id="pickGreen">
+        <svg viewBox="0 0 60 80"><ellipse cx="30" cy="20" rx="14" ry="20" fill="#2980b9"/><rect x="16" y="38" width="28" height="30" rx="6" fill="#1a5f8a"/><rect x="22" y="36" width="16" height="6" rx="3" fill="#2980b9"/></svg>
+        <div class="pill-btn pill-blue">Azul</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TV OFF -->
+  <div id="tvOff"><div id="tvLine"></div></div>
+
+  <!-- CONTROLS -->
+  <div id="controls">
+    <div class="ctrl-btn" id="btnLeft">◀</div>
+    <div class="ctrl-btn" id="btnRight">▶</div>
+  </div>
+</div>
+
+<script>
+const G = {
+  charScreenX: 80,
+  worldPos: 0,
+  speed: 2.5,
+  dialogOpen: false,
+  matrixActive: false,
+};
+
+const world = document.getElementById('world');
+const dialogBox = document.getElementById('dialogBox');
+const dialogName = document.getElementById('dialogName');
+const dialogText = document.getElementById('dialogText');
+const controls = document.getElementById('controls');
+const leg1 = document.getElementById('leg1');
+const leg2 = document.getElementById('leg2');
+const bgMusic = document.getElementById('bgMusic');
+
+const NPCS = { abacate: 900, cenoura: 1600, ghost: 2350 };
+const TRIGGER_DISTANCE = 60;
+
+const DIALOGS = {
+  intro: [
+    { speaker: '', text: '[´´Que estranho´´, você pensa. Estranho pois parece que nessa realidade existe uma incongruência, algo... que não parece tão real. É quase como se essa duvida fosse gerada porque você é isso e um pouco mais. É quase como se existisse um auto corretor automático que sempre te corrige quando você tenta pensar alguma negatividade sobre você...]' },
+    { speaker: '', text: '[É quase como se a realidade forçasse e com razão de falar sobre a ti sorrindo, nem que seja minimamente. Mesmo que a sua falta me cause uma tristeza bonita, eu sei que posso ser minimamente feliz sabendo que a existência permite que você esteja aqui, agora nesse exato momento nessa realidade.]' },
+  ],
+  abacate: [
+    { speaker: '🥑 Abacatudo', text: '[Você não sente que essa realidade não parece tão real assim? Parece tudo muito calculado. Quando se pensa em finitude, mas é de se recordar que o tempo é bondoso quando ele me dá a oportunidade de partilhar uma mesma época que você. e quando se falo em época, acabo me recordando que é um privilégio ter nascido em uma data próxima a sua e compartilhar a mesma época e tempo com você. Parece tudo muito.. calculado, não?]' },
+    { speaker: '🥑 Abacatudo', text: '[De repente a realidade de vez em quando prega peças, de vez em quando numa terça qualquer te faz ter vontades absurdas de comer doce. De vez em quando parece que tudo que você faz não vai pra frente, de vez em quando todo um belo sorriso que se brandiu por dias, radiante como um grito de independência se esvai, mas apesar disso ainda me permite lembrar que você não está sozinha e que você vale a pena ser lembrada até quando não quer qualquer cuidado.]' },
+    { speaker: '🥑 Abacatudo', text: '[E quando eu questiono sobre a realidade, é de se pensar em privilégio e na concidência de em um planeta tão grande saber que você gosta de caminhar aos domingos, que se retrai quando está triste e que odeia perguntas. É um privilégio e sempre será um privilégio, tanto que isso tudo não parece real.]' },
+  ],
+  cenoura: [
+    { speaker: '⛄ Cenourão', text: '[Oi. Não nos conhecemos, né? Mas me sinto fora dessa realidade. Quer dizer... quem inventou a língua portuguesa não teve a decência de inventar palavras que realmente lhe representem?]' },
+    { speaker: '⛄ Cenourão', text: '[Eu tenho quase certeza que vivemos numa simulação, e essa simulação foi um erro. Afinal quem foi o imbecil que inventou verbos do futuro quando você é um lindo fruturo do pretérito que permeia no passado e no futuro na mente alheia? Isso só pode ser um furo de programação desta realidade.]' },
+    { speaker: '⛄ Cenourão', text: '[E eu lhe asseguro que mesmo você sendo real ou não, entre linhas e códigos você é conjugavel, seja em estrofes, seja em páginas, letras. Você é digna de receber um abraço e de piadas até bobas num dia qualquer da semana em que esteja descontente com essa realidade que não lhe merece.]' },
+  ],
+  ghost: [
+    { speaker: '👻 Ghostface', text: '[Não pude deixar de ouvir a outra conversa de vocês e.... e eu nem sou de gostar de advérbios ou língua portuguesa.]' },
+    { speaker: '👻 Ghostface', text: '[ Mas eu diria que eu atrelo advérbio de intensidade as pequenas sílabas do seu rosto, de estrofes que compoem toda a sua conjuntura e até os lindos paragrafos de suas feições que só se percebe a partir da sua boca ou olhos.]' },
+    { speaker: '👻 Ghostface', text: '[E eu até tento conjugar você, mas falho miseravelmente. Você não se deixa flexionar igual os demais verbos. acho que você seria um bonito trava língua, porque de tanto tentar os dizeres a você a boca acaba se enrolando e de repente só sobra... letras para dizer. é de se gaguejar ao tentar ressaltar sobre, é de cuspir sem querer entre os lábios quando se exalta das madeixas dos seus cabelos e as vezes é de se engasgar ao ver tais olhos se encontrando aos de quem lhe vê, pra não dizer que você é quase como um bug de simulação.]' },
+  ],
+  preMatrix: [
+    { speaker: '', text: '???' },
+    { speaker: '', text: '[`` O quê está acontecendo?? Está tudo mudando??? ``]' },
+    { speaker: '', text: '[``O que houve? Tá tudo ficando esquisito, onde tá todo mundo?? ``]' },
+  ],
+  postMatrix: [
+    { speaker: '👧 Cereja', text: 'AGORA LASCO, eu não sou de verdade?!' },
+    { speaker: 'Matrix', text: '[Essa realidade veio te relembrar que você pode ter esquecido alguns fatos a seu respeito que merecem ser relembrados. Por isso, interrompemos a realidade verdadeira pra sanar algo...]' },
+    { speaker: 'Matrix', text: '[Faz tempo que não te dizem que você é importante, não é? Pode parecer banal, mas você é importante. Você merece ser lembrada, e não de forma pouca. Você é especial, você é uma bela companhia e não é preciso um dia de comemoração pra que você seja lembrada disso, esse tipo de coisa era pra ser mais que comum na sua rotina. Você é incrível, sem porquês e sem justificativas, não pelo que faz ou o que deixa de fazer. Você é companheira, você é uma pessoa camarada, você é uma pessoa inteligentissima.]' },
+    { speaker: 'Matrix', text: '[Você é merecedora de ser escutada, você é merecedora de ser valorizada. Você é muito amável! E não é preciso de cartas, de palavras pra isso. Eu prometo que você é alguém que vale a pena, e que todo e qualquer pensamento que exista de que você não é isso tudo é mentira.]' },
+    { speaker: 'Matrix', text: '[O seu jeito, a forma como você costuma agir e aquele jeito sem máscaras só seu, aquele jeito de se portar sendo você mesma é o mais especial disso tudo. Lhe colocaria estrofes e linhas de poesias pra te lembrar que rosas de diversas cores ou lírios, em que cada pétala seja um lembrete da suavidade que você repassa e do cheiro que relembra o quão memorável você é, ainda sim não são suficientes pra descrever um terço do que você é.]' },
+    { speaker: 'Matrix', text: '[Você me faz torcer todos os dias pra que prospere. Pra que você nunca se frustre, pra que você consiga ser feliz porque disso você é muito digna, e a sua felicidade torna a felicidade alheia muito maior.]' },
+    { speaker: 'Matrix', text: '[Toda torcida pra você é pouca. Na arquibancada de um estádio, eu torceria pra estar num camarote te vendo.]' },
+    { speaker: 'Matrix', text: '[Você vale a pena cada troféu que ainda vai conquistar.]' },
+  ],
+  red: [
+  { speaker: 'Matrix', text: 'Se você escolher a vermelha, então não há mais como fingir que tudo isso foi só um detalhe bonito no meio do caminho. Porque a verdade é que, entre todas as falhas dessa simulação, você sempre pareceu a mais improvável de todas. Bonita demais para ser acaso, rara demais para ser só coincidência e sonhadora demais pra ser só um comum.' },
+  { speaker: 'Matrix', text: 'E eu sei que você já pensou que às vezes não é suficiente, ou que não faz tanta diferença assim… mas isso é só a parte mais mentirosa dessa realidade. Porque cada detalhe seu é uma longa memória sendo nas pequenas coisas. E se um dia você perdesse a memória, eu ficaria mais do que contente em me voluntarias pra relembrar dessas pequenas coisas suas.' },
+  { speaker: 'Matrix', text: 'De relembrar das pequenas conquistas que você consegue, de relembrar das vezes que você fez algo pela primeira vez. De te relembrar até de como você se autocobra (infelizmente) com os seus dotes de querer ser tudo e um pouco mais, mesmo já se provando o suficiente.' },
+  { speaker: 'Matrix', text: 'E com isso tudo... em qualquer universo, em qualquer linha de código, em qualquer versão possível da existência, você continuaria sendo esse acontecimento bonito que faz tudo parecer menos vazio. E talvez o nome disso não seja bug. Talvez o nome disso seja sorte de quem cruza o seu caminho. E eu? Tenho a sorte de dizer que tive essa sorte.' },
+],
+blue: [
+  { speaker: 'Matrix', text: 'Se você escolher a azul, então não há mais como fingir que tudo isso foi só um detalhe bonito no meio do caminho. Porque a verdade é que, entre todas as falhas dessa simulação, você sempre pareceu a mais improvável de todas. Bonita demais para ser acaso, rara demais para ser só coincidência e sonhadora demais pra ser só um comum.' },
+  { speaker: 'Matrix', text: 'E eu sei que você já pensou que às vezes não é suficiente, ou que não faz tanta diferença assim… mas isso é só a parte mais mentirosa dessa realidade. Porque cada detalhe seu é uma longa memória sendo nas pequenas coisas. E se um dia você perdesse a memória, eu ficaria mais do que contente em me voluntarias pra relembrar dessas pequenas coisas suas.' },
+  { speaker: 'Matrix', text: 'De relembrar das pequenas conquistas que você consegue, de relembrar das vezes que você fez algo pela primeira vez. De te relembrar até de como você se autocobra (infelizmente) com os seus dotes de querer ser tudo e um pouco mais, mesmo já se provando o suficiente.' },
+  { speaker: 'Matrix', text: 'E com isso tudo... em qualquer universo, em qualquer linha de código, em qualquer versão possível da existência, você continuaria sendo esse acontecimento bonito que faz tudo parecer menos vazio. E talvez o nome disso não seja bug. Talvez o nome disso seja sorte de quem cruza o seu caminho. E eu? Tenho a sorte de dizer que tive essa sorte.' },
+],
+};
+
+let npcTriggered = { abacate: false, cenoura: false, ghost: false };
+let preMatrixTriggered = false;
+let gameStarted = false;
+let bgMusicStarted = false;
+
+// ── DIALOG ──────────────────────────────────────────────
+function showDialog(key, onDone) {
+  const lines = DIALOGS[key];
+  if (!lines) { if (onDone) onDone(); return; }
+  let i = 0;
+  G.dialogOpen = true;
+  controls.classList.add('hidden');
+  dialogBox.style.display = 'block';
+
+  function showLine() {
+    if (i >= lines.length) {
+      dialogBox.style.display = 'none';
+      G.dialogOpen = false;
+      controls.classList.remove('hidden');
+      if (onDone) onDone();
+      return;
+    }
+    dialogName.textContent = lines[i].speaker || '';
+    dialogText.textContent = lines[i].text;
+    i++;
+  }
+  showLine();
+
+  // click / tap avança diálogo
+  dialogBox.onclick = () => {
+    if (G.dialogOpen) {
+      if (!bgMusicStarted) startBackgroundMusic();
+      showLine();
+    }
+  };
+}
+
+// ── MATRIX ──────────────────────────────────────────────
+let matrixInterval = null;
+function startMatrix(onDone) {
+  const overlay = document.getElementById('matrixOverlay');
+  const canvas  = document.getElementById('matrixCanvas');
+  overlay.style.display = 'block';
+  G.matrixActive = true;
+  const ctx = canvas.getContext('2d');
+  canvas.width  = overlay.offsetWidth  || 400;
+  canvas.height = overlay.offsetHeight || 600;
+
+  const cols  = Math.floor(canvas.width / 14);
+  const drops = Array(cols).fill(1);
+  const chars = '01アイウエオカキクケコサシスセソ0110101';
+
+  let glitchCount = 0;
+  const glitch = document.getElementById('glitchOverlay');
+  glitch.style.display = 'block';
+  const glitchInt = setInterval(() => {
+    glitchCount++;
+    const r = () => Math.floor(Math.random() * 255);
+    glitch.style.boxShadow  = `inset 0 0 0 2px rgba(${r()},${r()},${r()},0.4)`;
+    glitch.style.transform  = `translate(${(Math.random()-0.5)*6}px,${(Math.random()-0.5)*4}px)`;
+    if (glitchCount > 14) { clearInterval(glitchInt); glitch.style.display = 'none'; glitch.style.transform = ''; }
+  }, 80);
+
+  let frame = 0;
+  matrixInterval = setInterval(() => {
+    ctx.fillStyle = 'rgba(0,0,0,0.05)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#0f0';
+    ctx.font = '13px monospace';
+    for (let i = 0; i < drops.length; i++) {
+      const c = chars[Math.floor(Math.random() * chars.length)];
+      ctx.fillText(c, i * 14, drops[i] * 14);
+      if (drops[i] * 14 > canvas.height && Math.random() > 0.975) drops[i] = 0;
+      drops[i]++;
+    }
+    if (++frame > 120) {
+      clearInterval(matrixInterval);
+      overlay.style.transition = 'opacity 1s';
+      overlay.style.opacity = '0';
+      setTimeout(() => {
+        overlay.style.display = 'none';
+        overlay.style.opacity = '1';
+        overlay.style.transition = '';
+        G.matrixActive = false;
+        if (onDone) onDone();
+      }, 1000);
+    }
+  }, 33);
+}
+
+// ── AUDIO ────────────────────────────────────────────────
+function startBackgroundMusic() {
+  if (bgMusicStarted) return;
+  bgMusicStarted = true;
+
+  try {
+    bgMusic.currentTime = 0;
+    const playPromise = bgMusic.play();
+    if (playPromise && typeof playPromise.then === 'function') {
+      playPromise
+        .then(() => {
+          document.getElementById('musicNote').style.display = 'block';
+        })
+        .catch(() => {
+          bgMusicStarted = false;
+        });
+    } else {
+      document.getElementById('musicNote').style.display = 'block';
+    }
+  } catch(e) {
+    bgMusicStarted = false;
+  }
+}
+
+function playSimpleMusic() {
+  try {
+    const ac = new (window.AudioContext || window.webkitAudioContext)();
+    const notes = [261, 329, 392, 523, 440, 392, 349, 294];
+    let t = ac.currentTime;
+    notes.forEach(freq => {
+      const o = ac.createOscillator(), g = ac.createGain();
+      o.connect(g); g.connect(ac.destination);
+      o.frequency.value = freq; o.type = 'sine';
+      g.gain.setValueAtTime(0.18, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.38);
+      o.start(t); o.stop(t + 0.4);
+      t += 0.35;
+    });
+    document.getElementById('musicNote').style.display = 'block';
+  } catch(e) {}
+}
+
+// ── PILL ─────────────────────────────────────────────────
+function showPillScene() {
+  const ps = document.getElementById('pillScene');
+  ps.style.display = 'flex';
+  controls.classList.add('hidden');
+
+  document.getElementById('pickRed').onclick = () => {
+    ps.style.display = 'none';
+    showDialog('red', endGame);
+  };
+  document.getElementById('pickGreen').onclick = () => {
+    ps.style.display = 'none';
+    showDialog('blue', endGame);
+  };
+}
+
+function endGame() {
+  const tv = document.getElementById('tvOff');
+  tv.style.display = 'flex';
+  document.getElementById('musicNote').style.display = 'none';
+  try { bgMusic.pause(); } catch(e) {}
+  setTimeout(() => { tv.querySelector('#tvLine').style.animation = 'tvShut 0.6s forwards'; }, 100);
+  setTimeout(() => { tv.style.background = '#000'; }, 1200);
+}
+
+// ── WALK ANIMATION ───────────────────────────────────────
+let walkTick = 0;
+function animateWalk(moving) {
+  if (!moving) { leg1.className = 'char-leg'; leg2.className = 'char-leg'; return; }
+  walkTick++;
+  if (walkTick % 12 < 6) { leg1.className = 'char-leg walk1'; leg2.className = 'char-leg walk2'; }
+  else                    { leg1.className = 'char-leg walk2'; leg2.className = 'char-leg walk1'; }
+}
+
+// ── INPUT ────────────────────────────────────────────────
+const keys = { left: false, right: false };
+
+// Teclado (setas + WASD)
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.right = true;
+  if (e.key === 'ArrowLeft'  || e.key === 'a' || e.key === 'A') keys.left  = true;
+  // Espaço / Enter avança diálogo
+  if ((e.key === ' ' || e.key === 'Enter') && G.dialogOpen) {
+    dialogBox.onclick();
+  }
+});
+document.addEventListener('keyup', e => {
+  if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.right = false;
+  if (e.key === 'ArrowLeft'  || e.key === 'a' || e.key === 'A') keys.left  = false;
+});
+
+// Botões touch/mouse
+const btnL = document.getElementById('btnLeft');
+const btnR = document.getElementById('btnRight');
+btnL.addEventListener('mousedown',  () => keys.left  = true);
+btnL.addEventListener('mouseup',    () => keys.left  = false);
+btnL.addEventListener('mouseleave', () => keys.left  = false);
+btnR.addEventListener('mousedown',  () => keys.right = true);
+btnR.addEventListener('mouseup',    () => keys.right = false);
+btnR.addEventListener('mouseleave', () => keys.right = false);
+btnL.addEventListener('touchstart', e => { e.preventDefault(); keys.left  = true;  }, { passive: false });
+btnL.addEventListener('touchend',   e => { e.preventDefault(); keys.left  = false; }, { passive: false });
+btnR.addEventListener('touchstart', e => { e.preventDefault(); keys.right = true;  }, { passive: false });
+btnR.addEventListener('touchend',   e => { e.preventDefault(); keys.right = false; }, { passive: false });
+
+// Tap na tela para avançar diálogo (mobile)
+document.getElementById('gameContainer').addEventListener('touchstart', e => {
+  if (G.dialogOpen) { e.preventDefault(); dialogBox.onclick(); }
+}, { passive: false });
+
+// ── GAME LOOP ────────────────────────────────────────────
+function gameLoop() {
+  if (!G.dialogOpen && !G.matrixActive) {
+    let moved = false;
+    if (keys.right) { G.worldPos += G.speed; moved = true; }
+    if (keys.left && G.worldPos > 0) { G.worldPos -= G.speed; moved = true; }
+    world.style.transform = `translateX(${-G.worldPos}px)`;
+    animateWalk(moved);
+  } else {
+    animateWalk(false);
+  }
+
+  const wp = G.worldPos + G.charScreenX;
+
+  if (!gameStarted && wp > 60) {
+    gameStarted = true;
+    showDialog('intro', null);
+  }
+  if (!npcTriggered.abacate && Math.abs(wp - NPCS.abacate) < TRIGGER_DISTANCE) {
+    npcTriggered.abacate = true; showDialog('abacate', null);
+  }
+  if (!npcTriggered.cenoura && Math.abs(wp - NPCS.cenoura) < TRIGGER_DISTANCE) {
+    npcTriggered.cenoura = true; showDialog('cenoura', null);
+  }
+  if (!npcTriggered.ghost && Math.abs(wp - NPCS.ghost) < TRIGGER_DISTANCE) {
+    npcTriggered.ghost = true; showDialog('ghost', null);
+  }
+  if (!preMatrixTriggered && wp > 3000) {
+    preMatrixTriggered = true;
+    showDialog('preMatrix', () => {
+      startMatrix(() => {
+        playSimpleMusic();
+        showDialog('postMatrix', () => { showPillScene(); });
+      });
+    });
+  }
+
+  requestAnimationFrame(gameLoop);
+}
+
+requestAnimationFrame(gameLoop);
+</script>
+</body>
+</html>
