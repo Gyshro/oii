@@ -320,6 +320,7 @@ let npcTriggered = { abacate: false, cenoura: false, ghost: false };
 let preMatrixTriggered = false;
 let gameStarted = false;
 let bgMusicStarted = false;
+let introMusicArmed = false;
 
 // ── DIALOG ──────────────────────────────────────────────
 function showDialog(key, onDone) {
@@ -329,6 +330,10 @@ function showDialog(key, onDone) {
   G.dialogOpen = true;
   controls.classList.add('hidden');
   dialogBox.style.display = 'block';
+
+  if (key === 'intro') {
+    introMusicArmed = true;
+  }
 
   function showLine() {
     if (i >= lines.length) {
@@ -342,14 +347,18 @@ function showDialog(key, onDone) {
     dialogText.textContent = lines[i].text;
     i++;
   }
+
   showLine();
 
-  // click / tap avança diálogo
   dialogBox.onclick = () => {
-    if (G.dialogOpen) {
-      if (!bgMusicStarted) startBackgroundMusic();
-      showLine();
+    if (!G.dialogOpen) return;
+
+    if (introMusicArmed && !bgMusicStarted) {
+      startBackgroundMusic();
+      introMusicArmed = false;
     }
+
+    showLine();
   };
 }
 
@@ -409,23 +418,28 @@ function startMatrix(onDone) {
 // ── AUDIO ────────────────────────────────────────────────
 function startBackgroundMusic() {
   if (bgMusicStarted) return;
-  bgMusicStarted = true;
 
   try {
+    bgMusic.volume = 1;
+    bgMusic.muted = false;
     bgMusic.currentTime = 0;
+
     const playPromise = bgMusic.play();
+
     if (playPromise && typeof playPromise.then === 'function') {
-      playPromise
-        .then(() => {
-          document.getElementById('musicNote').style.display = 'block';
-        })
-        .catch(() => {
-          bgMusicStarted = false;
-        });
+      playPromise.then(() => {
+        bgMusicStarted = true;
+        document.getElementById('musicNote').style.display = 'block';
+      }).catch((err) => {
+        console.log('Áudio bloqueado pelo navegador:', err);
+        bgMusicStarted = false;
+      });
     } else {
+      bgMusicStarted = true;
       document.getElementById('musicNote').style.display = 'block';
     }
-  } catch(e) {
+  } catch (err) {
+    console.log('Erro ao iniciar música:', err);
     bgMusicStarted = false;
   }
 }
@@ -468,7 +482,10 @@ function endGame() {
   const tv = document.getElementById('tvOff');
   tv.style.display = 'flex';
   document.getElementById('musicNote').style.display = 'none';
-  try { bgMusic.pause(); } catch(e) {}
+  try {
+    bgMusic.pause();
+    bgMusic.currentTime = 0;
+  } catch(e) {}
   setTimeout(() => { tv.querySelector('#tvLine').style.animation = 'tvShut 0.6s forwards'; }, 100);
   setTimeout(() => { tv.style.background = '#000'; }, 1200);
 }
@@ -489,7 +506,6 @@ const keys = { left: false, right: false };
 document.addEventListener('keydown', e => {
   if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.right = true;
   if (e.key === 'ArrowLeft'  || e.key === 'a' || e.key === 'A') keys.left  = true;
-  // Espaço / Enter avança diálogo
   if ((e.key === ' ' || e.key === 'Enter') && G.dialogOpen) {
     dialogBox.onclick();
   }
@@ -515,8 +531,18 @@ btnR.addEventListener('touchend',   e => { e.preventDefault(); keys.right = fals
 
 // Tap na tela para avançar diálogo (mobile)
 document.getElementById('gameContainer').addEventListener('touchstart', e => {
-  if (G.dialogOpen) { e.preventDefault(); dialogBox.onclick(); }
+  if (G.dialogOpen) {
+    e.preventDefault();
+    dialogBox.onclick();
+  }
 }, { passive: false });
+
+// Clique normal também avança diálogo
+document.getElementById('gameContainer').addEventListener('click', e => {
+  if (G.dialogOpen && !e.target.closest('#btnLeft') && !e.target.closest('#btnRight')) {
+    dialogBox.onclick();
+  }
+});
 
 // ── GAME LOOP ────────────────────────────────────────────
 function gameLoop() {
