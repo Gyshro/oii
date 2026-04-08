@@ -303,36 +303,38 @@ const DIALOGS = {
     { speaker: 'Matrix', text: '[Você vale a pena cada troféu que ainda vai conquistar.]' },
   ],
   red: [
-  { speaker: 'Matrix', text: 'Se você escolher a vermelha, então não há mais como fingir que tudo isso foi só um detalhe bonito no meio do caminho. Porque a verdade é que, entre todas as falhas dessa simulação, você sempre pareceu a mais improvável de todas. Bonita demais para ser acaso, rara demais para ser só coincidência e sonhadora demais pra ser só um comum.' },
-  { speaker: 'Matrix', text: 'E eu sei que você já pensou que às vezes não é suficiente, ou que não faz tanta diferença assim… mas isso é só a parte mais mentirosa dessa realidade. Porque cada detalhe seu é uma longa memória sendo nas pequenas coisas. E se um dia você perdesse a memória, eu ficaria mais do que contente em me voluntarias pra relembrar dessas pequenas coisas suas.' },
-  { speaker: 'Matrix', text: 'De relembrar das pequenas conquistas que você consegue, de relembrar das vezes que você fez algo pela primeira vez. De te relembrar até de como você se autocobra (infelizmente) com os seus dotes de querer ser tudo e um pouco mais, mesmo já se provando o suficiente.' },
-  { speaker: 'Matrix', text: 'E com isso tudo... em qualquer universo, em qualquer linha de código, em qualquer versão possível da existência, você continuaria sendo esse acontecimento bonito que faz tudo parecer menos vazio. E talvez o nome disso não seja bug. Talvez o nome disso seja sorte de quem cruza o seu caminho. E eu? Tenho a sorte de dizer que tive essa sorte.' },
-],
-blue: [
-  { speaker: 'Matrix', text: 'Se você escolher a azul, então não há mais como fingir que tudo isso foi só um detalhe bonito no meio do caminho. Porque a verdade é que, entre todas as falhas dessa simulação, você sempre pareceu a mais improvável de todas. Bonita demais para ser acaso, rara demais para ser só coincidência e sonhadora demais pra ser só um comum.' },
-  { speaker: 'Matrix', text: 'E eu sei que você já pensou que às vezes não é suficiente, ou que não faz tanta diferença assim… mas isso é só a parte mais mentirosa dessa realidade. Porque cada detalhe seu é uma longa memória sendo nas pequenas coisas. E se um dia você perdesse a memória, eu ficaria mais do que contente em me voluntarias pra relembrar dessas pequenas coisas suas.' },
-  { speaker: 'Matrix', text: 'De relembrar das pequenas conquistas que você consegue, de relembrar das vezes que você fez algo pela primeira vez. De te relembrar até de como você se autocobra (infelizmente) com os seus dotes de querer ser tudo e um pouco mais, mesmo já se provando o suficiente.' },
-  { speaker: 'Matrix', text: 'E com isso tudo... em qualquer universo, em qualquer linha de código, em qualquer versão possível da existência, você continuaria sendo esse acontecimento bonito que faz tudo parecer menos vazio. E talvez o nome disso não seja bug. Talvez o nome disso seja sorte de quem cruza o seu caminho. E eu? Tenho a sorte de dizer que tive essa sorte.' },
-],
+    { speaker: 'Matrix', text: 'Se você escolher a vermelha, então não há mais como fingir que tudo isso foi só um detalhe bonito no meio do caminho. Porque a verdade é que, entre todas as falhas dessa simulação, você sempre pareceu a mais improvável de todas. Bonita demais para ser acaso, rara demais para ser só coincidência e sonhadora demais pra ser só um comum.' },
+    { speaker: 'Matrix', text: 'E eu sei que você já pensou que às vezes não é suficiente, ou que não faz tanta diferença assim… mas isso é só a parte mais mentirosa dessa realidade. Porque cada detalhe seu é uma longa memória sendo nas pequenas coisas. E se um dia você perdesse a memória, eu ficaria mais do que contente em me voluntarias pra relembrar dessas pequenas coisas suas.' },
+    { speaker: 'Matrix', text: 'De relembrar das pequenas conquistas que você consegue, de relembrar das vezes que você fez algo pela primeira vez. De te relembrar até de como você se autocobra (infelizmente) com os seus dotes de querer ser tudo e um pouco mais, mesmo já se provando o suficiente.' },
+    { speaker: 'Matrix', text: 'E com isso tudo... em qualquer universo, em qualquer linha de código, em qualquer versão possível da existência, você continuaria sendo esse acontecimento bonito que faz tudo parecer menos vazio. E talvez o nome disso não seja bug. Talvez o nome disso seja sorte de quem cruza o seu caminho. E eu? Tenho a sorte de dizer que tive essa sorte.' },
+  ],
+  blue: [
+    { speaker: 'Matrix', text: 'Se você escolher a azul, então não há mais como fingir que tudo isso foi só um detalhe bonito no meio do caminho. Porque a verdade é que, entre todas as falhas dessa simulação, você sempre pareceu a mais improvável de todas. Bonita demais para ser acaso, rara demais para ser só coincidência e sonhadora demais pra ser só um comum.' },
+    { speaker: 'Matrix', text: 'E eu sei que você já pensou que às vezes não é suficiente, ou que não faz tanta diferença assim… mas isso é só a parte mais mentirosa dessa realidade. Porque cada detalhe seu é uma longa memória sendo nas pequenas coisas. E se um dia você perdesse a memória, eu ficaria mais do que contente em me voluntarias pra relembrar dessas pequenas coisas suas.' },
+    { speaker: 'Matrix', text: 'De relembrar das pequenas conquistas que você consegue, de relembrar das vezes que você fez algo pela primeira vez. De te relembrar até de como você se autocobra (infelizmente) com os seus dotes de querer ser tudo e um pouco mais, mesmo já se provando o suficiente.' },
+    { speaker: 'Matrix', text: 'E com isso tudo... em qualquer universo, em qualquer linha de código, em qualquer versão possível da existência, você continuaria sendo esse acontecimento bonito que faz tudo parecer menos vazio. E talvez o nome disso não seja bug. Talvez o nome disso seja sorte de quem cruza o seu caminho. E eu? Tenho a sorte de dizer que tive essa sorte.' },
+  ],
 };
 
 let npcTriggered = { abacate: false, cenoura: false, ghost: false };
 let preMatrixTriggered = false;
 let gameStarted = false;
 let bgMusicStarted = false;
-let introMusicArmed = false;
+let currentAdvanceDialog = null;
+let introMusicPending = false;
 
 // ── DIALOG ──────────────────────────────────────────────
 function showDialog(key, onDone) {
   const lines = DIALOGS[key];
   if (!lines) { if (onDone) onDone(); return; }
+
   let i = 0;
   G.dialogOpen = true;
   controls.classList.add('hidden');
   dialogBox.style.display = 'block';
 
   if (key === 'intro') {
-    introMusicArmed = true;
+    introMusicPending = true;
   }
 
   function showLine() {
@@ -340,6 +342,7 @@ function showDialog(key, onDone) {
       dialogBox.style.display = 'none';
       G.dialogOpen = false;
       controls.classList.remove('hidden');
+      currentAdvanceDialog = null;
       if (onDone) onDone();
       return;
     }
@@ -348,18 +351,8 @@ function showDialog(key, onDone) {
     i++;
   }
 
+  currentAdvanceDialog = showLine;
   showLine();
-
-  dialogBox.onclick = () => {
-    if (!G.dialogOpen) return;
-
-    if (introMusicArmed && !bgMusicStarted) {
-      startBackgroundMusic();
-      introMusicArmed = false;
-    }
-
-    showLine();
-  };
 }
 
 // ── MATRIX ──────────────────────────────────────────────
@@ -416,14 +409,24 @@ function startMatrix(onDone) {
 }
 
 // ── AUDIO ────────────────────────────────────────────────
-function startBackgroundMusic() {
+try { bgMusic.load(); } catch(e) {}
+
+function startBackgroundMusicFromGesture() {
   if (bgMusicStarted) return;
 
   try {
-    bgMusic.volume = 1;
-    bgMusic.muted = false;
-    bgMusic.currentTime = 0;
+    bgMusic.pause();
+  } catch(e) {}
 
+  try {
+    bgMusic.muted = false;
+    bgMusic.volume = 1;
+    bgMusic.currentTime = 0;
+    bgMusic.setAttribute('playsinline', '');
+    bgMusic.setAttribute('webkit-playsinline', '');
+  } catch(e) {}
+
+  try {
     const playPromise = bgMusic.play();
 
     if (playPromise && typeof playPromise.then === 'function') {
@@ -445,6 +448,11 @@ function startBackgroundMusic() {
 }
 
 function playSimpleMusic() {
+  if (bgMusicStarted) {
+    document.getElementById('musicNote').style.display = 'block';
+    return;
+  }
+
   try {
     const ac = new (window.AudioContext || window.webkitAudioContext)();
     const notes = [261, 329, 392, 523, 440, 392, 349, 294];
@@ -502,12 +510,30 @@ function animateWalk(moving) {
 // ── INPUT ────────────────────────────────────────────────
 const keys = { left: false, right: false };
 
+function handleDialogAdvanceFromGesture(e) {
+  if (!G.dialogOpen || !currentAdvanceDialog) return false;
+
+  if (e && e.target && (e.target.closest('#btnLeft') || e.target.closest('#btnRight'))) {
+    return false;
+  }
+
+  if (e && typeof e.preventDefault === 'function') e.preventDefault();
+
+  if (introMusicPending && !bgMusicStarted) {
+    startBackgroundMusicFromGesture();
+    introMusicPending = false;
+  }
+
+  currentAdvanceDialog();
+  return true;
+}
+
 // Teclado (setas + WASD)
 document.addEventListener('keydown', e => {
   if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.right = true;
   if (e.key === 'ArrowLeft'  || e.key === 'a' || e.key === 'A') keys.left  = true;
-  if ((e.key === ' ' || e.key === 'Enter') && G.dialogOpen) {
-    dialogBox.onclick();
+  if ((e.key === ' ' || e.key === 'Enter') && G.dialogOpen && currentAdvanceDialog) {
+    currentAdvanceDialog();
   }
 });
 document.addEventListener('keyup', e => {
@@ -529,19 +555,16 @@ btnL.addEventListener('touchend',   e => { e.preventDefault(); keys.left  = fals
 btnR.addEventListener('touchstart', e => { e.preventDefault(); keys.right = true;  }, { passive: false });
 btnR.addEventListener('touchend',   e => { e.preventDefault(); keys.right = false; }, { passive: false });
 
-// Tap na tela para avançar diálogo (mobile)
-document.getElementById('gameContainer').addEventListener('touchstart', e => {
-  if (G.dialogOpen) {
-    e.preventDefault();
-    dialogBox.onclick();
-  }
+// ESSENCIAL PARA MOBILE: tocar no touchend real do diálogo/container
+dialogBox.addEventListener('touchend', handleDialogAdvanceFromGesture, { passive: false });
+dialogBox.addEventListener('click', handleDialogAdvanceFromGesture);
+
+document.getElementById('gameContainer').addEventListener('touchend', e => {
+  handleDialogAdvanceFromGesture(e);
 }, { passive: false });
 
-// Clique normal também avança diálogo
 document.getElementById('gameContainer').addEventListener('click', e => {
-  if (G.dialogOpen && !e.target.closest('#btnLeft') && !e.target.closest('#btnRight')) {
-    dialogBox.onclick();
-  }
+  handleDialogAdvanceFromGesture(e);
 });
 
 // ── GAME LOOP ────────────────────────────────────────────
